@@ -21,10 +21,10 @@ module.exports = (api, options) => {
   const keyFile = api.resolve('key.pem')
   const hasKeyFile = fs.existsSync(keyFile)
 
+  if (pluginOptions.disable) {
+    return;
+  }
   api.chainWebpack((webpackConfig) => {
-    if (pluginOptions.disable) {
-      return;
-    }
     webpackConfig.entryPoints.delete('app')
     const entry = {}
     if (pluginOptions.components.background) {
