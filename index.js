@@ -82,11 +82,19 @@ module.exports = (api, options) => {
             jsonContent.description = packageJson.description
           }
 
-          if (isProduction) {
+          if (isDevelopment) {
             return resolve(JSON.stringify(jsonContent, null, 2))
           }
 
+          // Generate CSS files in content script for each JS entry. useful if your ContentScripts contain CSS
+          if (isProduction && pluginOptions.components.contentScripts && componentOptions.contentScripts.emmitCSS && jsonContent.content_scripts.length > 0) {
+            jsonContent.content_scripts.forEach(cs => {
+              cs.css = cs.js.map(jscontent => jscontent.replace(".js", ".css"));
+            });
+          }
+
           jsonContent.content_security_policy = jsonContent.content_security_policy || "script-src 'self' 'unsafe-eval'; object-src 'self'"
+          
 
           try {
             fs.statSync(keyFile)
@@ -108,7 +116,7 @@ module.exports = (api, options) => {
       }
     }]))
 
-    if (isProduction) {
+    if (isProduction && !pluginOptions.disableZip) {
       webpackConfig.plugins.push(new ZipPlugin({
         path: api.resolve(`${options.outputDir || 'dist'}-zip`),
         filename: `${packageJson.name}-v${packageJson.version}.zip`
